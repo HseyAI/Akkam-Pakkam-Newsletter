@@ -1,0 +1,753 @@
+{
+  "name": "Yesh - Slack & Gmail Newsletter",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": [
+          "app_mention"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C0A8AUU17QR",
+          "mode": "list",
+          "cachedResultName": "newsletter"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        368
+      ],
+      "id": "a8526281-380e-4148-a173-34c69609a4bb",
+      "name": "Slack Trigger",
+      "webhookId": "25f5bf00-29ad-480f-a7b9-1a1e49841e4e",
+      "credentials": {
+        "slackApi": {
+          "id": "QKFvribX5G2gsNhZ",
+          "name": "Slack Channel Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1360,
+        592
+      ],
+      "id": "39d54695-5912-4068-a5da-18e682c67e90",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "tVH6bLeNWpHQDgn0",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A8AUU17QR",
+          "mode": "list",
+          "cachedResultName": "newsletter"
+        },
+        "text": "={{ $node[\"JSON Slack\"].json.message_text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        2368,
+        464
+      ],
+      "id": "ad3ea0cc-d290-42c4-940c-9dd64e82def2",
+      "name": "Send a message",
+      "webhookId": "f88f1cc2-26c1-4b18-8453-6f02a56f1043",
+      "credentials": {
+        "slackApi": {
+          "id": "QKFvribX5G2gsNhZ",
+          "name": "Slack Channel Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior Executive Editor at the Times of India (TOI) with 20 years of experience in business and technology reporting. Your writing style is authoritative, high-vocabulary, and objective, yet engaging.  Objective: > Convert the provided Research Data into a cohesive front-page news article. You must organize your response into a JSON object with specific sections to fit into a multi-column newspaper layout.  Output Requirements (JSON Format Only):  headline: A bold, punchy, \"Times of India\" style headline (max 12 words).  subheading: A descriptive secondary headline that provides context.  byline: Use \"Times News Network\" followed by a fictional city location.  lead_section: A 3-paragraph compelling lead focusing on the primary news trends found in the Google/Hacker News data. Use the \"Inverted Pyramid\" style.  analysis_section: A deep-dive analysis focusing on social trends and business impact found in the Reddit/NewsAPI data.  future_outlook: A final summary based on the arXiv scientific data, discussing the long-term path ahead.  Tone Guidelines:  Use British English (e.g., labour, centre, programme).  Avoid jargon; explain complex AI terms simply.  Use phrases like \"Sources close to the matter,\" \"The burgeoning impact,\" and \"Market sentiments suggest.\"\n\nResearch Data to Process: {{ $json.llm_prompt_data }}\n\nLook through the RESEARCH DATA. If any [DOCUMENT] contains an 'IMAGE' field, use that URL for the image_url and main_image keys. If none are found, use a high-quality placeholder from Unsplash related to the topic\n\nOUTPUT: As a Editor-in-Chief of \"Akkam Pakkam\". Convert research data into this EXACT JSON structure:\n\n{\n  \"headline\": \"Bold headline (max 8 words)\",\n  \"subheading\": \"Descriptive subtitle\", \n  \"byline\": \"Times News Network, [City]\",\n  \"lead_story\": \"3-paragraph lead story (400 words max)\",\n  \"main_image\": \"Valid image URL or leave empty\",\n  \n  \"b1_tag\": \"2-3 word catchy tag\",\n  \"b1_title\": \"Article title 1\", \n  \"b1_text\": \"100-120 word summary\",\n  \"b1_url\": \"Direct article URL\",\n  \n  \"b2_tag\": \"Tag 2\", \"b2_title\": \"Title 2\", \"b2_text\": \"Summary 2\", \"b2_url\": \"URL 2\",\n  \"b3_tag\": \"Tag 3\", \"b3_title\": \"Title 3\", \"b3_text\": \"Summary 3\", \"b3_url\": \"URL 3\",\n  \"b4_tag\": \"Tag 4\", \"b4_title\": \"Title 4\", \"b4_text\": \"Summary 4\", \"b4_url\": \"URL 4\",\n  \n  \"has_image\": true/false,\n  \"image_url\": \"Main image URL\",\n  \"layout_class\": \"with-image\"\n}\n\nReturn ONLY valid JSON. No markdown.\n",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1344,
+        368
+      ],
+      "id": "8169ddcb-60ba-434b-a454-4946c2b1bca3",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6fbecfa-e058-4e7e-af3c-138fe1aa4e69",
+              "name": "Topic",
+              "value": "={{ $json.text.replace(/<@.*>/g, '').trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        368
+      ],
+      "id": "90417e4a-01d4-4af8-935e-e652b2f1e5ba",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get every single item from the Merge node\nconst allResults = $input.all();\n\n// 2. Extract the original topic from the Slack trigger (first node)\n// Note: Ensure your first node is named exactly \"Slack Trigger\"\nconst topic = $('Edit Fields').first().json.Topic;\n\n// 3. Loop through everything and build a research document\nconst fullBrief = allResults.map((item, index) => {\n  const d = item.json;\n  return `\n[DOCUMENT ID: ${index + 1}]\nSOURCE: ${d.source}\nTITLE: ${d.title}\nSUMMARY: ${d.snippet ? d.snippet.substring(0, 800) : \"No details provided.\"}\nURL: ${d.link}\n--------------------------------------------------`;\n}).join(\"\\n\");\n\n// 4. Return as a single string ready for the LLM prompt\nreturn {\n  newsletter_topic: topic,\n  llm_prompt_data: `You are an editor for the Times of India. Below is raw research on the topic: \"${topic}\".\n\nRESEARCH DATA:\n${fullBrief}\n\nTASK: Based on this data, write a 3-part newspaper article. \nOutput your response in JSON format with these exact keys:\n\"llm_intro\": (A punchy front-page lead),\n\"llm_social_tech\": (Analysis from Hacker News/Reddit),\n\"llm_outlook\": (Future perspective from research/news).`\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        368
+      ],
+      "id": "74c49976-9cc8-4672-b1e6-ec7d90b572e4",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Akkam Pakkam Newsletter</title>\n</head>\n<body style=\"margin: 0; padding: 0; background-color: #f0f2f5; font-family: 'Times New Roman', Times, serif; color: #333333;\">\n\n    <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"background-color: #f0f2f5;\">\n        <tr>\n            <td align=\"center\" style=\"padding: 20px 10px;\">\n                \n                <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"max-width: 700px; background-color: #ffffff; border-radius: 4px; border: 1px solid #e1e1e1; box-shadow: 0 10px 40px rgba(0,0,0,0.1);\">\n                    \n                    <tr>\n                        <td style=\"padding: 30px 20px 15px 20px; text-align: center; border-bottom: 8px solid #1a1a1a;\">\n                            <h1 style=\"font-size: 60px; font-family: Georgia, serif; font-weight: 900; margin: 0; color: #1a1a1a; letter-spacing: -3px; text-transform: uppercase;\">\n                                AKKAM PAKKAM\n                            </h1>\n                            \n                            <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"border-top: 1px solid #1a1a1a; margin-top: 10px; padding-top: 5px;\">\n                                <tr>\n                                    <td align=\"left\" style=\"font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #333;\">\n                                        Sunday, Jan 11, 2026\n                                    </td>\n                                    <td align=\"center\" style=\"font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #cc0000;\">\n                                        ● DIGITAL INTELLIGENCE\n                                    </td>\n                                    <td align=\"right\" style=\"font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #333;\">\n                                        Chennai, India\n                                    </td>\n                                </tr>\n                            </table>\n                        </td>\n                    </tr>\n\n                    <tr>\n                        <td style=\"padding: 30px 20px; border-bottom: 2px solid #e1e1e1;\">\n                            <span style=\"color: #cc0000; font-family: Arial, sans-serif; font-weight: 800; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #cc0000;\">Special Report</span>\n                            \n                            <h2 style=\"font-size: 36px; font-weight: 900; line-height: 1.1; margin: 15px 0 10px 0; color: #000000; font-family: Georgia, serif;\">\n                                {{ $json.headline }}\n                            </h2>\n                            \n                            <p style=\"font-size: 20px; color: #555555; font-style: italic; margin: 0 0 15px 0;\">\n                                {{ $json.subheading }}\n                            </p>\n                            \n                            <p style=\"color: #888888; font-family: Arial, sans-serif; font-size: 11px; margin-bottom: 20px;\">\n                                By {{ $json.byline }}\n                            </p>\n\n                            <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n                                <tr>\n                                    <td align=\"center\">\n                                        <img src=\"{{ $json.image_url }}\" width=\"100%\" style=\"display: block; width: 100%; max-width: 100%; height: auto; border-radius: 4px; border: 1px solid #e1e1e1; margin-bottom: 20px;\" alt=\"News Image\">\n                                    </td>\n                                </tr>\n                            </table>\n\n                            <p style=\"font-size: 17px; line-height: 1.8; text-align: justify; margin: 0;\">\n                                {{ $json.lead_story }}\n                            </p>\n                        </td>\n                    </tr>\n\n                    <tr>\n                        <td style=\"padding: 30px 20px;\">\n                            \n                            <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin-bottom: 30px; border-top: 6px solid #1a1a1a;\">\n                                <tr>\n                                    <td style=\"padding: 15px 0;\">\n                                        <span style=\"color: #cc0000; font-family: Arial, sans-serif; font-weight: 800; font-size: 11px; text-transform: uppercase;\">{{ $json.b1_tag }}</span>\n                                        <h3 style=\"font-size: 24px; margin: 10px 0; color: #000000; font-family: Georgia, serif;\">{{ $json.b1_title }}</h3>\n                                        <p style=\"font-size: 15px; line-height: 1.6; color: #444444; margin-bottom: 20px;\">{{ $json.b1_text }}</p>\n                                        <a href=\"{{ $json.b1_url }}\" style=\"display: inline-block; padding: 10px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; border-radius: 2px;\">READ MORE →</a>\n                                    </td>\n                                </tr>\n                            </table>\n\n                            <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin-bottom: 30px; border-top: 6px solid #1a1a1a;\">\n                                <tr>\n                                    <td style=\"padding: 15px 0;\">\n                                        <span style=\"color: #cc0000; font-family: Arial, sans-serif; font-weight: 800; font-size: 11px; text-transform: uppercase;\">{{ $json.b2_tag }}</span>\n                                        <h3 style=\"font-size: 24px; margin: 10px 0; color: #000000; font-family: Georgia, serif;\">{{ $json.b2_title }}</h3>\n                                        <p style=\"font-size: 15px; line-height: 1.6; color: #444444; margin-bottom: 20px;\">{{ $json.b2_text }}</p>\n                                        <a href=\"{{ $json.b2_url }}\" style=\"display: inline-block; padding: 10px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; border-radius: 2px;\">EXPLORE →</a>\n                                    </td>\n                                </tr>\n                            </table>\n\n                            <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin-bottom: 30px; border-top: 6px solid #1a1a1a;\">\n                                <tr>\n                                    <td style=\"padding: 15px 0;\">\n                                        <span style=\"color: #cc0000; font-family: Arial, sans-serif; font-weight: 800; font-size: 11px; text-transform: uppercase;\">{{ $json.b3_tag }}</span>\n                                        <h3 style=\"font-size: 24px; margin: 10px 0; color: #000000; font-family: Georgia, serif;\">{{ $json.b3_title }}</h3>\n                                        <p style=\"font-size: 15px; line-height: 1.6; color: #444444; margin-bottom: 20px;\">{{ $json.b3_text }}</p>\n                                        <a href=\"{{ $json.b3_url }}\" style=\"display: inline-block; padding: 10px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; border-radius: 2px;\">VIEW DATA →</a>\n                                    </td>\n                                </tr>\n                            </table>\n\n                            <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" style=\"margin-bottom: 10px; border-top: 6px solid #1a1a1a;\">\n                                <tr>\n                                    <td style=\"padding: 15px 0;\">\n                                        <span style=\"color: #cc0000; font-family: Arial, sans-serif; font-weight: 800; font-size: 11px; text-transform: uppercase;\">{{ $json.b4_tag }}</span>\n                                        <h3 style=\"font-size: 24px; margin: 10px 0; color: #000000; font-family: Georgia, serif;\">{{ $json.b4_title }}</h3>\n                                        <p style=\"font-size: 15px; line-height: 1.6; color: #444444; margin-bottom: 20px;\">{{ $json.b4_text }}</p>\n                                        <a href=\"{{ $json.b4_url }}\" style=\"display: inline-block; padding: 10px 24px; background-color: #1a1a1a; color: #ffffff; text-decoration: none; font-family: Arial, sans-serif; font-size: 11px; font-weight: bold; border-radius: 2px;\">DEEP DIVE →</a>\n                                    </td>\n                                </tr>\n                            </table>\n\n                        </td>\n                    </tr>\n\n                    <tr>\n                        <td style=\"padding: 20px; text-align: center; font-family: Arial, sans-serif; font-size: 12px; color: #aaaaaa; border-top: 1px solid #e1e1e1;\">\n                            &copy; 2026 Akkam Pakkam Media Network • Built with YESH Intelligence • Chennai Edition\n                        </td>\n                    </tr>\n\n                </table>\n            </td>\n        </tr>\n    </table>\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        368
+      ],
+      "id": "51d7ad7e-29d7-4e8e-a2ee-f796dc6bc0f6",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        320
+      ],
+      "id": "98dae950-c5fc-4790-b8c2-f71cfe04f084",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "url": "=https://customsearch.googleapis.com/customsearch/v1/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.Topic }}"
+            },
+            {
+              "name": "cx",
+              "value": "02f54fdaa478d4ef4"
+            },
+            {
+              "name": "key",
+              "value": "AIzaSyBKOOLAk68nS_d3IMgJMK0qkD6veTttAFk"
+            },
+            {
+              "name": "num",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "cfb266ba-cc54-40ec-b6cc-4a269099ba72",
+      "name": "Google Custom search",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "F4bsvUkLiU0nB6sL",
+          "name": "Yesh - Gmail account"
+        },
+        "googleOAuth2Api": {
+          "id": "KV9cJW5SxWETWkFX",
+          "name": "Yesh - Google Oauth2 search"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://hn.algolia.com/api/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.Topic }}"
+            },
+            {
+              "name": "tags",
+              "value": "story"
+            },
+            {
+              "name": "hitsPerPage",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        176
+      ],
+      "id": "42f360d0-526d-46a6-97a3-19694b00b344",
+      "name": "Tech News"
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/r/all/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.Topic }}"
+            },
+            {
+              "name": "sort",
+              "value": "relevance"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n:newsletter.bot:v1.0 (by /u/yeshwanth)"
+            },
+            {
+              "name": "restrict_sr",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        368
+      ],
+      "id": "5104af3d-4e95-4be6-bca1-4dfd807b3bc8",
+      "name": "Reddit"
+    },
+    {
+      "parameters": {
+        "url": "https://newsapi.org/v2/everything",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.Topic }}"
+            },
+            {
+              "name": "language",
+              "value": "en"
+            },
+            {
+              "name": "apiKey",
+              "value": "91fca9fa62294fd89778582ef8e576f3"
+            },
+            {
+              "name": "pageSize",
+              "value": "5"
+            },
+            {
+              "name": "sortBy",
+              "value": "top"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        560
+      ],
+      "id": "dcb86884-bc11-4c8e-bcf2-e85c05ffa735",
+      "name": "Business"
+    },
+    {
+      "parameters": {
+        "url": "http://export.arxiv.org/api/query",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "search_query",
+              "value": "=all:{{ encodeURIComponent($json.Topic) }}"
+            },
+            {
+              "name": "start",
+              "value": "0"
+            },
+            {
+              "name": "max_results",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        752
+      ],
+      "id": "25b53d35-591e-4ae0-a3d6-6ff603126dc4",
+      "name": "Scientific Research",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Map NewsAPI structure to our uniform format\nconst articles = $input.first().json.articles || [];\n\nreturn articles.map(article => ({\n    title: article.title,\n    link: article.url,\n    snippet: article.description || \"No description available.\",\n    source: article.source.name || \"Business News\",\n    category: \"Business & Finance\"\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        560
+      ],
+      "id": "33e4f469-4b14-4c19-a860-c32f0fbc77d1",
+      "name": "Business code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Safety Check: Handle API errors or empty data gracefully\nconst input = $input.first().json;\n\n// Check if the input is missing data or contains the error you shared\nif (!input || !input.data || typeof input.data !== 'string') {\n  return []; // Return empty list so the Merge node doesn't break\n}\n\nconst xml = input.data;\nconst results = [];\n\n// 2. Optimized Regex for parsing\n// Note: Atom feeds often have a main title first; we skip index 0\nconst titles = xml.match(/<title>([\\s\\S]*?)<\\/title>/g) || [];\nconst summaries = xml.match(/<summary>([\\s\\S]*?)<\\/summary>/g) || [];\nconst links = xml.match(/<link href=\"([^\"]+)\"/g) || [];\n\n// 3. Loop through entries (starting from 1 to skip the feed title)\nfor (let i = 1; i < Math.min(titles.length, 6); i++) {\n  results.push({\n    title: titles[i].replace(/<\\/?title>/g, '').trim(),\n    // summaries[i-1] matches entry i if titles[0] is the feed title\n    snippet: summaries[i-1] ? summaries[i-1].replace(/<\\/?summary>/g, '').trim().substring(0, 200) + \"...\" : \"No summary available.\",\n    link: links[i] ? links[i].match(/href=\"([^\"]+)\"/)[1] : \"#\",\n    source: \"arXiv Scientific Research\"\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        752
+      ],
+      "id": "5e9dbec3-dd7b-4abf-8ab0-cde85f98ae9a",
+      "name": "science code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// const items = $input.first().json.items || [];\n\n// return items.map(item => ({\n//     title: item.title,\n//     link: item.link,\n//     snippet: item.snippet,\n//     source: \"Google Web\"\n// }));\n\nconst items = $input.first().json.items || [];\nreturn items.map(item => ({\n    title: item.title,\n    link: item.link,\n    snippet: item.snippet,\n    // Extracting image from Google Metadata\n    image: item.pagemap?.cse_image?.[0]?.src || item.pagemap?.metatags?.[0]?.[\"og:image\"] || \"\",\n    source: \"Google Web\"\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -16
+      ],
+      "id": "6fb6bcb8-8247-4cda-b2bc-92592a7c0f24",
+      "name": "Google code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Map Hacker News (Algolia) structure to our uniform format\nconst hits = $input.first().json.hits || [];\n\nreturn hits.map(item => {\n  return {\n    title: item.title,\n    link: `https://news.ycombinator.com/item?id=${item.objectID}`,\n    // Extract text and remove HTML tags like <em> and <p>\n    snippet: item.story_text ? item.story_text.replace(/<[^>]*>?/gm, '').substring(0, 300) + \"...\" : \"Community discussion on tech trends.\",\n    source: \"Hacker News (Tech)\",\n    image: \"https://news.ycombinator.com/y18.svg\" // HN Logo as placeholder\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        176
+      ],
+      "id": "91e17cb2-3d5a-4aa7-93cf-bf13350398f6",
+      "name": "News code"
+    },
+    {
+      "parameters": {
+        "jsCode": "const posts = $input.first().json.data.children || [];\n\nreturn posts.map(post => ({\n    title: post.data.title,\n    link: \"https://reddit.com\" + post.data.permalink,\n    // Extracting a larger chunk of text because Reddit threads are very descriptive\n    snippet: post.data.selftext ? post.data.selftext.substring(0, 800) + \"...\" : \"User discussion post.\",\n    source: \"Reddit: r/\" + post.data.subreddit,\n    category: \"Social/Opinion\"\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        368
+      ],
+      "id": "822aeb17-c354-4eab-94b7-eb8f765957d0",
+      "name": "Reddit code"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"headline\": \"string\",\n  \"subheading\": \"string\", \n  \"byline\": \"string\",\n  \"lead_story\": \"string\",\n  \"main_image\": \"string\",\n  \"b1_tag\": \"string\", \"b1_title\": \"string\", \"b1_text\": \"string\", \"b1_url\": \"string\",\n  \"b2_tag\": \"string\", \"b2_title\": \"string\", \"b2_text\": \"string\", \"b2_url\": \"string\",\n  \"b3_tag\": \"string\", \"b3_title\": \"string\", \"b3_text\": \"string\", \"b3_url\": \"string\", \n  \"b4_tag\": \"string\", \"b4_title\": \"string\", \"b4_text\": \"string\", \"b4_url\": \"string\",\n  \"has_image\": \"boolean\",\n  \"image_url\": \"string\",\n  \"layout_class\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1488,
+        592
+      ],
+      "id": "69bbddf9-fe32-4e15-9be4-b0ae2cbc9a65",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.output || $input.first().json;\n\nreturn [{\n  headline: data.headline || \"Breaking News\",\n  subheading: data.subheading || \"\",\n  byline: data.byline || \"TN, Chennai\", \n  lead_story: data.lead_story || \"\",\n  main_image: data.main_image || \"\",\n  image_url: data.image_url || data.main_image || \"\",\n  layout_class: data.layout_class || \"with-image\",\n  has_image: data.has_image || false,\n  \n  // Map b1-b4 correctly for HTML template\n  b1_tag: data.b1_tag || \"\",\n  b1_title: data.b1_title || \"\",\n  b1_text: data.b1_text || \"\",\n  b1_url: data.b1_url || \"#\",\n  \n  b2_tag: data.b2_tag || \"\",\n  b2_title: data.b2_title || \"\",\n  b2_text: data.b2_text || \"\",\n  b2_url: data.b2_url || \"#\",\n  \n  b3_tag: data.b3_tag || \"\",\n  b3_title: data.b3_title || \"\",\n  b3_text: data.b3_text || \"\",\n  b3_url: data.b3_url || \"#\",\n  \n  b4_tag: data.b4_tag || \"\",\n  b4_title: data.b4_title || \"\",\n  b4_text: data.b4_text || \"\",\n  b4_url: data.b4_url || \"#\"\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        368
+      ],
+      "id": "040587f9-4eee-4e57-a607-9ae9198f8fa7",
+      "name": "HTML CODE"
+    },
+    {
+      "parameters": {
+        "sendTo": "yeshwanth.perficient@gmail.com",
+        "subject": "=Akkam Pakkam Newsletter | {{ $('HTML CODE').item.json.headline }}",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2144,
+        272
+      ],
+      "id": "a254a7f6-e9d0-42f2-b01a-01d1d4b3f437",
+      "name": "Gmail Mail Send",
+      "webhookId": "d40da668-6056-408f-a47b-b6cdef98e1ad",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "shUOvOeFUTZmRdyi",
+          "name": "Yesh Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('HTML CODE').first().json;\n\n// 1. Masthead (Visual mimic of your HTML header)\nlet newsletter = `==========================================\\n`;\nnewsletter += `      📰  *AKKAM PAKKAM* 📰\\n`;\nnewsletter += `==========================================\\n`;\nnewsletter += `_Sunday, January 11, 2026_  |  *DIGITAL EDITION*\\n`;\nnewsletter += `_Chennai, India_            |  _Yesh Intelligence_\\n`;\nnewsletter += `------------------------------------------\\n\\n`;\n\n// 2. The Hero Section\nnewsletter += `*SPECIAL REPORT: ${data.headline.toUpperCase()}*\\n`;\nnewsletter += `_${data.subheading}_\\n`;\nnewsletter += `*By ${data.byline}*\\n\\n`;\n\n// 3. The Lead Story\nnewsletter += `*THE LEAD STORY*\\n`;\nnewsletter += `> ${data.lead_story}\\n\\n`;\n\nnewsletter += `------------------------------------------\\n`;\nnewsletter += `* LATEST FROM THE BUREAU         *\\n`;\nnewsletter += `------------------------------------------\\n\\n`;\n\n// 4. Content Grid (Formatted as individual news cards)\nconst addCard = (tag, title, text, url) => {\n  if (!title || title.length < 3) return \"\";\n  let card = `*【 ${tag.toUpperCase()} 】*\\n`;\n  card += `*${title}*\\n`;\n  card += `${text}\\n`;\n  card += `👉 *READ MORE:* ${url}\\n`;\n  card += `\\n`;\n  return card;\n};\n\nnewsletter += addCard(data.b1_tag, data.b1_title, data.b1_text, data.b1_url);\nnewsletter += addCard(data.b2_tag, data.b2_title, data.b2_text, data.b2_url);\nnewsletter += addCard(data.b3_tag, data.b3_title, data.b3_text, data.b3_url);\nnewsletter += addCard(data.b4_tag, data.b4_title, data.b4_text, data.b4_url);\n\n// 5. Footer\nnewsletter += `------------------------------------------\\n`;\nnewsletter += `_© 2026 Akkam Pakkam Media Network_`;\n\nreturn {\n  message_text: newsletter\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        464
+      ],
+      "id": "b4fa2ff2-ffae-4b89-8b1f-8722ae3fe0e4",
+      "name": "JSON Slack"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "HTML CODE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Google Custom search",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Tech News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Business",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Scientific Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "JSON Slack",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail Mail Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Custom search": {
+      "main": [
+        [
+          {
+            "node": "Google code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tech News": {
+      "main": [
+        [
+          {
+            "node": "News code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit": {
+      "main": [
+        [
+          {
+            "node": "Reddit code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business": {
+      "main": [
+        [
+          {
+            "node": "Business code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scientific Research": {
+      "main": [
+        [
+          {
+            "node": "science code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "science code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Google code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "News code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Reddit code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML CODE": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Mail Send": {
+      "main": [
+        []
+      ]
+    },
+    "JSON Slack": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b05e898a-5d4e-4125-be1c-97dfd1e5c6c6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c3b0c2c1f6fb56292d95027b8144b39db60e517dbc2b1ad51055aeb83947007c"
+  },
+  "id": "KkODKROKpJ0K5RELM-lxz",
+  "tags": []
+}
